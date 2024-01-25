@@ -26,17 +26,17 @@ class MyClassThatLooksLikeAList:
     def contains_both_hello_and_world(self):
         return "hello" in self and "world" in self
 
-myclass = MyClassThatLooksLikeAList()
-myclass.append("hello")
-myclass.append("world")
-print(myclass.objects)  # prints ['hello', 'world']
-print(myclass)  # prints ['hello', 'world']
-print(myclass[0])  # prints 'hello'
-print(myclass.index("world"))  # prints 1
-print(len(myclass))  # prints 2
-print(list(reversed(myclass)))  # prints ['world', 'hello']
+fake_list = MyClassThatLooksLikeAList()
+fake_list.append("hello")
+fake_list.append("world")
+print(fake_list.objects)  # prints ['hello', 'world']
+print(fake_list)  # prints ['hello', 'world']
+print(fake_list[0])  # prints 'hello'
+print(fake_list.index("world"))  # prints 1
+print(len(fake_list))  # prints 2
+print(list(reversed(fake_list)))  # prints ['world', 'hello']
 print(fake_list.contains_both_hello_and_world()) # prints True
-print(myclass.pop())  # prints 'world'
+print(fake_list.pop())  # prints 'world'
 print(fake_list.contains_both_hello_and_world()) # prints False
 ```
 
