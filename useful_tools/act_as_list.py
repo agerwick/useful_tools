@@ -93,7 +93,7 @@ print(fake_list.in_uppercase()) # prints "HELLO WORLD"
                 """for adding two lists: myfakelist + ["hello", "world"] """
                 if isinstance(other, list):
                     other = self.__class__(other) # convert to the same class as self
-                return getattr(self, attribute) + getattr(other, attribute)
+                return self.__class__(getattr(self, attribute) + getattr(other, attribute))
 
             def __str__(self):
                 """for printing the list: print(myfakelist)"""
