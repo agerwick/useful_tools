@@ -27,10 +27,20 @@ def cache_to_memory(func):
     """
 @cache_to_memory decorator to cache the result of a method to memory
 If used in conjunction with @property, the property decorator must be defined before the cache_to_memory decorator, like this:
-@property
-@cache_to_memory
-def my_property(self):
-    return "my_property"
+
+from useful_tools.cache_decorators import cache_to_memory
+class MyClass:
+    def __init__(self):
+        self.counter = 0
+    @property # you can of course skip the @property decorator and have a method that returns a value
+    @cache_to_memory
+    def my_property(self):
+        self.counter += 1
+        return f"my_property was called {self.counter} times"
+
+my_object = MyClass()
+print(my_object.my_property) # should show that my_property was called 1 time
+print(my_object.my_property) # should show that my_property was called 1 time again, because it was cached
     """
     if isinstance(func, property):
         raise TypeError(f"Cannot cache a property. Apply @property above @cache_to_memory, not below.")
@@ -59,7 +69,7 @@ this decorator can only be used in classes that have the following attributes:
 
 If used in conjunction with @property, the property decorator must be defined before the cache_to_disk decorator, like this:
 
-from cache_decorators import cache_to_disk
+from useful_tools.cache_decorators import cache_to_disk
 class MyClass:
     cache_enabled = True
     cache_dir = "cache"
@@ -168,5 +178,47 @@ print(myclass.cache_status) # gives info about the use of cache in the previous 
             with open(filepath, 'wb') as f:
                 pickle.dump((time.time(), result), f)
                 self.cache_status[cache_status_key].append("cache_saved")
+            self.last_saved_cache_file = filepath
         return result
+    return wrapper
+
+def delete_last_saved_cache_file(func):
+    """
+decorator to delete the cache file created by the cache_to_disk decorator
+This is used when the response is invalid or the data is not usable,
+in order to prevent the cache from being used in the next request
+
+Usage:
+from useful_tools.cache_decorators import cache_to_disk, delete_last_saved_cache_file
+class MyClass:
+    cache_enabled = True
+    cache_dir = "cache"
+    cache_expiration = 2 # seconds
+    force_cache_expiration = False
+    ignore_cache_expiration = False
+
+    @cache_to_disk
+    def my_method(self):
+        return "my_method"
+    
+    @delete_last_saved_cache_file
+    def delete_cache(self):
+        pass # the deletion is done in the wrapper
+
+myclass = MyClass()
+print(myclass.my_method()) # prints "my_method"
+print(myclass.cache_status) # gives info about the use of cache in the previous call
+# determine if the response is valid
+# let's pretend the response is invalid, and delete the cache file
+myclass.delete_cache()
+print(myclass.my_method()) # prints "my_method"
+print(myclass.cache_status) # gives info about the use of cache in the previous call
+print("You can see from the cache status that the cache file was deleted.")
+    """
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if hasattr(self, "last_saved_cache_file"):
+            os.remove(self.last_saved_cache_file)
+            return self.last_saved_cache_file
+        return None
     return wrapper

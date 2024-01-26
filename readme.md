@@ -120,6 +120,42 @@ obj.my_property
 # returns 'my_property has been called 2 times.'
 ```
 
+### delete_last_saved_cache_file
+
+The `delete_last_saved_cache_file` decorator is used to create a method on your class 
+that can be used to delete the cache file created by the cache_to_disk decorator.
+This is used when the response is invalid or the data is not usable,
+in order to prevent the cache from being used in the next request
+
+Usage:
+```python
+from useful_tools.cache_decorators import cache_to_disk, delete_last_saved_cache_file
+class MyClass:
+    cache_enabled = True
+    cache_dir = "cache"
+    cache_expiration = 2 # seconds
+    force_cache_expiration = False
+    ignore_cache_expiration = False
+
+    @cache_to_disk
+    def my_method(self):
+        return "my_method"
+    
+    @delete_last_saved_cache_file
+    def delete_cache(self):
+        pass # the deletion is done in the wrapper
+
+myclass = MyClass()
+print(myclass.my_method()) # prints "my_method"
+print(myclass.cache_status) # gives info about the use of cache in the previous call
+# determine if the response is valid
+# let's pretend the response is invalid, and delete the cache file
+myclass.delete_cache()
+print(myclass.my_method()) # prints "my_method"
+print(myclass.cache_status) # gives info about the use of cache in the previous call
+print("You can see from the cache status that the cache file was deleted.")
+```
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
