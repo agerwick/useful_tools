@@ -3,13 +3,30 @@ def act_as_list(attribute):
 This class decorator adds list-like behavior to a class.
 
 What's the point?
-- you can add methods to the class, which you can't do with a list
+- working with class instances as if they were lists looks neat in your code
+- you can add other methods to the class, which you can't do with a list
 - compared to adding the list-like methods you need directly on the class, 
     it makes the class look neater, keeping it DRY, so it's easier to read
-- also, you should not inherit from list 
-    (as it's implemented in C, so it could have unintended consequences)
-    so this is the best solution I could come up with
-- the result is that objects of classes with this decorator look and act like a list
+
+Why not just inherit from List?
+ - you should not inherit from list, as it's not designed to be subclassed
+    It's implemented in C, so subclassing it could have unintended consequences.
+
+The result is that objects of classes with this decorator look and act like lists
+
+How?
+
+This is achieved by dynamically creating a subclass of the decorated class
+and adding special methods to it that provide list-like behavior.
+The decorator is a function that takes a class (cls) as an argument. 
+Inside this function, a new class ActsLikeAList is defined, which inherits
+from cls (the decorated class). This new class overrides several special
+methods to make instances of the class behave like a list, then returns the
+new class.
+
+It then overrides __name__ and other special methods of the new class to
+match those of the original class, so it still looks like the original class.
+
 
 Usage example:
 ```
@@ -61,9 +78,28 @@ fake_list = MyClassThatLooksLikeAList(["hello", "world"])
 print(fake_list.contains_both_hello_and_world()) # prints True
 print(fake_list.in_uppercase()) # prints "HELLO WORLD"
 ```
+
+So, all of this is just so I can write
+`for server in servers` and `servers[0]`
+instead of
+`for server in servers.server_list` and `servers.server_list[0]`
+?
+
+Yes, yes it is.
+
+But it does look neat now, doesn't it?
     """
     def decorator(cls):
+        """
+        Why this complexity?
+        Python decorators can't add special methods like `__getitem__` or `__len__` directly to the classes they decorate. This is because these methods are looked up on the class itself, not on its instances.
+        To work around this limitation, we create a new class that inherits from the decorated class, and add the special methods to that class. This way, the special methods are looked up on the new class, and they can access the attribute of the original class that we want to make act like a list.
+        """
         class ActsLikeAList(cls):
+            """
+`@act_as_list:`
+This class has been decorated with `@act_as_list` - it looks and acts like a list.
+"""
             def __eq__(self, other):
                 """for comparison with other lists: myfakelist == ["hello", "world"] """
                 return list(getattr(self, attribute)) == other
@@ -151,9 +187,11 @@ print(fake_list.in_uppercase()) # prints "HELLO WORLD"
                 """for sorting the list: myfakelist.sort()"""
                 getattr(self, attribute).sort(*args, **kwargs)
 
-        # assign the name and qualname of the original class to the new class
+        # assign name, qualname, etc. of the original class to the new class
         # otherwise, the name of the class will be 'ActsLikeAList'
         ActsLikeAList.__name__ = cls.__name__
         ActsLikeAList.__qualname__ = cls.__qualname__
+        ActsLikeAList.__module__ = cls.__module__
+        ActsLikeAList.__doc__ = (cls.__doc__ or "") + "\n" + ActsLikeAList.__doc__
         return ActsLikeAList
     return decorator
