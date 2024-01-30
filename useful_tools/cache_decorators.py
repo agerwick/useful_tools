@@ -7,6 +7,36 @@ from functools import wraps
 # this is used in order to avoid sending the same request multiple times
 # cache_property works only for properties, while cache_result works for any function
 
+# def make_hashable(obj):
+#     """make an object hashable, so it can be used as an identifier for the cache"""
+#     # recursively convert lists and dicts to tuples and frozensets
+#     if isinstance(obj, (tuple, list)):
+#         return tuple(make_hashable(e) for e in obj)
+#     elif isinstance(obj, dict):
+#         return frozenset((make_hashable(k), make_hashable(v)) for k, v in obj.items())
+#     return obj
+
+def make_hashable(obj):
+    """make an object hashable, so it can be used as an identifier for the cache"""
+    # recursively convert lists and dicts to tuples and frozensets
+    if isinstance(obj, (tuple, list)):
+        # the order og args is relevant, so the order of the items in the tuple should not be changed
+        return tuple(make_hashable(e) for e in obj)
+    elif isinstance(obj, dict):
+        # sort the dict by key before converting to frozenset, as the order of kwargs (and keys in a dict) is not relevant, so the order of the keys should not affect the hash
+        return frozenset((k, make_hashable(v)) for k, v in sorted(obj.items()))
+    return obj
+
+def make_arg_hash(args, kwargs):
+    """make a hash of the arguments that can be used to check if the arguments are the same as something that was previously cached"""
+    # preserve the order or args, so calling a function with the same arguments in a different order will NOT give the same hash
+    # this is important for the cache, because the cache should not be used if the arguments are different
+    # frozenset is used because it makes the args hashable
+    # the arguments are put in a list of one item before being converted to a frozenset to preserve the order of the arguments
+    hashable_args = make_hashable([args])
+    hashable_kwargs = make_hashable(kwargs.items())
+    return hash(f"{hashable_args}_{hashable_kwargs}")
+
 def cache_property(func):
     """
 Legacy decorator to cache the result of a property to memory. You can now use the @cache_to_memory decorator instead, as long as you define the property decorator before the cache_to_memory decorator, like this:
@@ -47,13 +77,14 @@ print(my_object.my_property) # should show that my_property was called 1 time ag
     
     cache = {}
     @wraps(func)
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         attr_name = func.__name__
+        arg_hash = make_arg_hash(args, kwargs)
         if attr_name not in cache:
             cache[attr_name] = {}
-        if args not in cache[attr_name]:
-            cache[attr_name][args] = func(*args)
-        return cache[attr_name][args]
+        if arg_hash not in cache[attr_name]:
+            cache[attr_name][arg_hash] = func(*args, **kwargs)
+        return cache[attr_name][arg_hash]
     return wrapper
 
 def cache_to_disk(func):
@@ -102,8 +133,7 @@ print(myclass.cache_status) # gives info about the use of cache in the previous 
             if not hasattr(self, attr):
                 raise AttributeError(f"{self.__class__.__name__} does not have the attribute '{attr}', required by the @cache_to_disk decorator.")
 
-        # make a hash of the arguments
-        arg_hash = f"{hash(args)}_{hash(frozenset(kwargs.items()))}"
+        arg_hash = make_arg_hash(args, kwargs)
 
         # create a dictionary to store the cache status for each function
         if not hasattr(self, "cache_status"):
