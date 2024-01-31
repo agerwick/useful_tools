@@ -1,20 +1,12 @@
 import os
 import time
 import pickle
+import hashlib
 from functools import wraps
 
 # decorators to cache the result of a function
 # this is used in order to avoid sending the same request multiple times
-# cache_property works only for properties, while cache_result works for any function
-
-# def make_hashable(obj):
-#     """make an object hashable, so it can be used as an identifier for the cache"""
-#     # recursively convert lists and dicts to tuples and frozensets
-#     if isinstance(obj, (tuple, list)):
-#         return tuple(make_hashable(e) for e in obj)
-#     elif isinstance(obj, dict):
-#         return frozenset((make_hashable(k), make_hashable(v)) for k, v in obj.items())
-#     return obj
+# cache_property works only for properties, while cache_to_memory and cache_to_disk works for any function
 
 def make_hashable(obj):
     """make an object hashable, so it can be used as an identifier for the cache"""
@@ -34,8 +26,10 @@ def make_arg_hash(args, kwargs):
     # frozenset is used because it makes the args hashable
     # the arguments are put in a list of one item before being converted to a frozenset to preserve the order of the arguments
     hashable_args = make_hashable([args])
-    hashable_kwargs = make_hashable(kwargs.items())
-    return hash(f"{hashable_args}_{hashable_kwargs}")
+    hashable_kwargs = make_hashable(kwargs)
+    encoded_arg_str = f"{hashable_args}_{hashable_kwargs}".encode()
+    sha256hash = hashlib.sha256(encoded_arg_str).hexdigest()
+    return sha256hash
 
 def cache_property(func):
     """
@@ -191,12 +185,13 @@ print(myclass.cache_status) # gives info about the use of cache in the previous 
                     else:
                         if time_since_cache < 10:
                             time_since_cache_formatted = f"{time_since_cache:.3f}s"
-                        elif time_since_cache < 60:
-                            time_since_cache_formatted = f"{time_since_cache:.1f}s"
-                        elif time_since_cache < 3600:
-                            time_since_cache_formatted = f"{time_since_cache/60:.1f}m"
-                        else:
-                            time_since_cache_formatted = f"{time_since_cache/3600:.1f}h"
+                        # the following lines are not covered by tests, as it is not possible to mock time.time()
+                        elif time_since_cache < 60:                                         #  pragma: no cover
+                            time_since_cache_formatted = f"{time_since_cache:.1f}s"         #  pragma: no cover
+                        elif time_since_cache < 3600:                                       #  pragma: no cover
+                            time_since_cache_formatted = f"{time_since_cache/60:.1f}m"      #  pragma: no cover
+                        else:                                                               #  pragma: no cover
+                            time_since_cache_formatted = f"{time_since_cache/3600:.1f}h"    #  pragma: no cover
                         self.cache_status[cache_status_key].append(f"cache_expired: {time_since_cache_formatted} passed")
         
         # call the function - this will happen if the cache_expiration is not set or the cache file doesn't exist or is expired
@@ -248,7 +243,8 @@ print("You can see from the cache status that the cache file was deleted.")
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if hasattr(self, "last_saved_cache_file"):
-            os.remove(self.last_saved_cache_file)
-            return self.last_saved_cache_file
+            if os.path.exists(self.last_saved_cache_file):
+                os.remove(self.last_saved_cache_file)
+                return self.last_saved_cache_file
         return None
     return wrapper
