@@ -10,6 +10,18 @@ class MyClassThatLooksLikeAList:
     def contains_both_hello_and_world(self):
         return "hello" in self and "world" in self
 
+@act_as_list('actual_list')
+class MyClassWithExtraAttrs:
+    def __init__(self, actual_list = [], extra_attr = None):
+        if extra_attr == None:
+            raise Exception("extra_attr is required")
+        else:
+            self.extra_attr = extra_attr
+        self.actual_list = actual_list
+    def _from_list(self, actual_list):
+        return MyClassWithExtraAttrs(actual_list, extra_attr=self.extra_attr)
+
+
 def test_getitem():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])
     assert fake_list[0] == "hello"
@@ -41,6 +53,7 @@ def test_add_with_list():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])
     result = fake_list + ["foo", "bar"]
     assert result == ["hello", "world", "foo", "bar"]
+    assert result.__class__ == MyClassThatLooksLikeAList
 
 def test_remove():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])
@@ -131,3 +144,37 @@ def test_class_and_class_name():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])
     assert fake_list.__class__.__name__ == "MyClassThatLooksLikeAList"
     assert fake_list.__class__ == MyClassThatLooksLikeAList
+
+def test_add_with_class():
+    fake_list1 = MyClassThatLooksLikeAList(["hello", "world"])
+    fake_list2 = MyClassThatLooksLikeAList(["foo", "bar"])
+    result = fake_list1 + fake_list2
+    assert result == ["hello", "world", "foo", "bar"]
+    assert result.__class__ == list # because the class does not have a _from_list method, it returns a list
+
+def test_add_with_list():
+    fake_list = MyClassThatLooksLikeAList(["hello", "world"])
+    result = fake_list + ["foo", "bar"]
+    assert result == ["hello", "world", "foo", "bar"]
+    assert result.__class__ == list # because the class does not have a _from_list method, it returns a list
+
+def test_class_with_extra_attrs():
+    fake_list = MyClassWithExtraAttrs(["hello", "world"], extra_attr="fubar")
+    assert fake_list.extra_attr == "fubar" # extra_attr is set in the constructor, so it should be available on the instance
+
+def test_class_with_extra_attrs_without_extra_attr():
+    with pytest.raises(Exception):
+        MyClassWithExtraAttrs(["hello", "world"]) # extra_attr is required in the constructor, so it should raise an exception
+
+def test_add_with_list_returning_original_class():
+    fake_list = MyClassWithExtraAttrs(["hello", "world"], extra_attr="fubar")
+    result = fake_list + ["foo", "bar"]
+    assert result == ["hello", "world", "foo", "bar"]
+    assert result.__class__ == MyClassWithExtraAttrs # because the class has a _from_list method, it returns the original class
+
+def test_add_with_class_returning_original_class():
+    fake_list1 = MyClassWithExtraAttrs(["hello", "world"], extra_attr="fubar")
+    fake_list2 = MyClassWithExtraAttrs(["foo", "bar"], extra_attr="fubar")
+    result = fake_list1 + fake_list2
+    assert result == ["hello", "world", "foo", "bar"]
+    assert result.__class__ == MyClassWithExtraAttrs # because the class has a _from_list method, it returns the original class

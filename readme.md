@@ -43,6 +43,36 @@ print(fake_list.contains_both_hello_and_world()) # prints False
 In this code, MyClassThatLooksLikeAList behaves like a list, with the list-like behavior based on the `objects` attribute.
 But, unlike a list, you can define your own methods and properties on this class.
 
+### Adding @act_as_list objects with other @act_as_list objects or lists
+When adding another list or list_like object to an @act_as_list object, it will return a list object by default.
+The reason for this is that the decorator is not aware of the required attributes for the constructor method of the decorated class.
+If you add a _from_list() method to the decorated class, the list will be passed to this method and it will return the result of that instead.
+This method can then call the constructor method (__init__) with the correct arguments for the decorated class.
+Example:
+
+```python
+@act_as_list('actual_list')
+class MyClassWithExtraAttrs:
+    def __init__(self, actual_list = [], extra_attr = None):
+        if extra_attr == None:
+            raise Exception("extra_attr is required")
+        else:
+            self.extra_attr = extra_attr
+        self.actual_list = actual_list
+    def _from_list(self, actual_list):
+        # construct a new MyClassWithExtraAttrs using the list and required attributes
+        return MyClassWithExtraAttrs(actual_list, extra_attr=self.extra_attr)
+
+fake_list = MyClassWithExtraAttrs(["hello", "world"], extra_attr="fubar")
+result = fake_list + ["foo", "bar"]
+print(result) # ["hello", "world", "foo", "bar"]
+print(result.__class__) # MyClassWithExtraAttrs # because the class has a _from_list method, it returns the original class
+# if the _from_list class was not defined, the resulting class would be a list
+
+```
+
+
+
 ## Cache Decorators
 
 The `cache_decorators.py` module provides decorators to cache the result of a function or property. This is useful to avoid sending the same request multiple times.

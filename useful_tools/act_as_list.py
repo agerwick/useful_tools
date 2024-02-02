@@ -100,6 +100,10 @@ But it does look neat now, doesn't it?
 `@act_as_list:`
 This class has been decorated with `@act_as_list` - it looks and acts like a list.
 """
+            def __init__(self, *args, **kwargs):
+                """for creating an instance of the class: myfakelist = MyClassThatLooksLikeAList()"""
+                super().__init__(*args, **kwargs)
+
             def __eq__(self, other):
                 """for comparison with other lists: myfakelist == ["hello", "world"] """
                 return list(getattr(self, attribute)) == other
@@ -126,10 +130,22 @@ This class has been decorated with `@act_as_list` - it looks and acts like a lis
                 return item in getattr(self, attribute)
 
             def __add__(self, other):
-                """for adding two lists: myfakelist + ["hello", "world"] """
+                """for adding two lists: myfakelist + ["hello", "world"]
+                if the other object is not a list (or a fake list), it will be added to the end of the list: myfakelist + "hello"
+                if the decorated class has a _from_list method, it will be used to create a new instance of the class from the result of the addition
+                if not, the result will be a list
+                """
                 if isinstance(other, list):
-                    other = self.__class__(other) # convert to the same class as self
-                return self.__class__(getattr(self, attribute) + getattr(other, attribute))
+                    _tmp_list = list(getattr(self, attribute)) + other
+                elif isinstance(other, ActsLikeAList):
+                    _tmp_list = list(getattr(self, attribute)) + list(getattr(other, attribute))
+                else:
+                    _tmp_list = list(getattr(self, attribute)) + [other]
+                
+                if hasattr(self, "_from_list"):
+                    return self._from_list(_tmp_list) # if the class has a _from_list method, return a new instance of the class
+                else:
+                    return _tmp_list # if the class doesn't have a _from_list method, return a list
 
             def __str__(self):
                 """for printing the list: print(myfakelist)"""
