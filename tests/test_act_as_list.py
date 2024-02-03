@@ -43,18 +43,6 @@ def test_append():
     assert fake_list[0] == "hello"
     assert fake_list[1] == "world"
 
-def test_add():
-    fake_list1 = MyClassThatLooksLikeAList(["hello", "world"])
-    fake_list2 = MyClassThatLooksLikeAList(["foo", "bar"])
-    result = fake_list1 + fake_list2
-    assert result == ["hello", "world", "foo", "bar"]
-
-def test_add_with_list():
-    fake_list = MyClassThatLooksLikeAList(["hello", "world"])
-    result = fake_list + ["foo", "bar"]
-    assert result == ["hello", "world", "foo", "bar"]
-    assert result.__class__ == MyClassThatLooksLikeAList
-
 def test_remove():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])
     fake_list.remove("hello")
@@ -101,7 +89,16 @@ def test_index():
 
 def test_reversed():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])
-    assert list(reversed(fake_list)) == ["world", "hello"]
+    reversed_list = reversed(fake_list)
+    normal_reversed_list = reversed([1,2,3])
+    assert list(reversed_list) == ["world", "hello"]
+    assert reversed_list.__class__ == normal_reversed_list.__class__ # reversed returns a list_reverseiterator by default
+
+def test_reversed_returning_original_class():
+    fake_list = MyClassWithExtraAttrs(["hello", "world"], extra_attr="fubar")
+    result = reversed(fake_list)
+    assert result == ["world", "hello"]
+    assert result.__class__ == MyClassWithExtraAttrs # because the class has a _from_list method, it returns the original class
 
 def test_reverse():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])

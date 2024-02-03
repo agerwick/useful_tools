@@ -135,17 +135,23 @@ This class has been decorated with `@act_as_list` - it looks and acts like a lis
                 if the decorated class has a _from_list method, it will be used to create a new instance of the class from the result of the addition
                 if not, the result will be a list
                 """
-                if isinstance(other, list):
-                    _tmp_list = list(getattr(self, attribute)) + other
-                elif isinstance(other, ActsLikeAList):
-                    _tmp_list = list(getattr(self, attribute)) + list(getattr(other, attribute))
-                else:
-                    _tmp_list = list(getattr(self, attribute)) + [other]
+                new_list = self.copy()
+                if isinstance(other, list) or isinstance(other, ActsLikeAList):
+                    for item in other:
+                        new_list.append(item)
+                return new_list
+                # alternative implementation:
+                # if isinstance(other, list):
+                #     _tmp_list = list(getattr(self, attribute)) + other
+                # elif isinstance(other, ActsLikeAList):
+                #     _tmp_list = list(getattr(self, attribute)) + list(getattr(other, attribute))
+                # else:
+                #     _tmp_list = list(getattr(self, attribute)) + [other]
                 
-                if hasattr(self, "_from_list"):
-                    return self._from_list(_tmp_list) # if the class has a _from_list method, return a new instance of the class
-                else:
-                    return _tmp_list # if the class doesn't have a _from_list method, return a list
+                # if hasattr(self, "_from_list"):
+                #     return self._from_list(_tmp_list) # if the class has a _from_list method, return a new instance of the class
+                # else:
+                #     return _tmp_list # if the class doesn't have a _from_list method, return a list
 
             def __str__(self):
                 """for printing the list: print(myfakelist)"""
@@ -156,11 +162,16 @@ This class has been decorated with `@act_as_list` - it looks and acts like a lis
                 return f"{self.__class__.__name__}({getattr(self, attribute)})"
             
             def __reversed__(self):
-                """for reversing the list: reversed(myfakelist)"""
-                return reversed(getattr(self, attribute))
+                """for reversing the list without modifying the list: reversed(myfakelist)"""
+                # TODO: this should return a new instance of the class, not a list
+                _tmp_list = reversed(getattr(self, attribute))
+                if hasattr(self, "_from_list"):
+                    return self._from_list(_tmp_list) # if the class has a _from_list method, return a new instance of the class
+                else:
+                    return _tmp_list # if the class doesn't have a _from_list method, return a list
 
             def reverse(self):
-                """for reversing the list: myfakelist.reverse()"""
+                """for reversing the list inplace: myfakelist.reverse()"""
                 getattr(self, attribute).reverse()
 
             def append(self, item):
@@ -185,7 +196,11 @@ This class has been decorated with `@act_as_list` - it looks and acts like a lis
 
             def copy(self):
                 """for copying the list: myfakelist.copy()"""
-                return getattr(self, attribute).copy()
+                _tmp_list = getattr(self, attribute).copy()
+                if hasattr(self, "_from_list"):
+                    return self._from_list(_tmp_list) # if the class has a _from_list method, return a new instance of the class
+                else:
+                    return _tmp_list # if the class doesn't have a _from_list method, return a list
             
             def index(self, item):
                 """for getting the index of an item in the list: myfakelist.index("hello")"""
