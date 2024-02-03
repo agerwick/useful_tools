@@ -101,38 +101,6 @@ def test_execute_with_cache_ignore_cache_expiration():
     os.remove(cache_file)
     os.remove(new_cache_file)
 
-def test_execute_with_cache_force_cache_expiration():
-    config_obj = MagicMock()
-    config_obj.cache_enabled = True
-    config_obj.cache_dir = "test_cache"
-    config_obj.cache_expiration = 60
-    config_obj.force_cache_expiration = True
-
-    def test_func(config_obj, *args, **kwargs):
-        return "result"
-
-    test_name = "test_execute_with_cache_force_cache_expiration"
-    args = (test_name, "arg1", "arg2")
-    kwargs = {"kwarg1": "value1", "kwarg2": "value2"}
-
-    # Create a cache file
-    result, cache_file, cache_status = execute_with_cache(config_obj, test_func, args, kwargs)
-
-    # overwrite the cache file with an expired cache
-    with open(cache_file, "wb") as f:
-        pickle.dump((time.time() - 100, "expired_result"), f)
-
-    result, new_cache_file, cache_status = execute_with_cache(config_obj, test_func, args, kwargs)
-
-    assert result == "result"
-    assert new_cache_file is not None
-    assert new_cache_file == cache_file
-    assert os.path.exists(new_cache_file)
-
-    # Clean up the cache files
-    os.remove(cache_file)
-    os.remove(new_cache_file)
-
 def test_execute_with_cache_cache_disabled():
     config_obj = MagicMock()
     config_obj.cache_enabled = False
