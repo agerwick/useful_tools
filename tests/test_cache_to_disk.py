@@ -1,8 +1,6 @@
 import pytest
 import time
-import os
 import shutil
-import hashlib
 import inspect
 from useful_tools.cache_decorators import cache_to_disk, make_arg_hash
 
@@ -73,6 +71,15 @@ def test_property_cache_to_disk():
     result = my_class.my_property
     assert result == "my_property"
     assert my_class.number_of_property_calls == 2  # The number of calls should be 2 because the cache has expired
+
+def test_cache_to_disk_on_property():
+    # this should generate an exception, as the property decorator must be defined before the cache_to_disk decorator
+    with pytest.raises(TypeError) as error_info:
+        class IncorrectUsageOfCacheToDisk:
+            @cache_to_disk
+            @property # this should fail, as the property decorator must be defined before the cache_to_disk decorator
+            def my_property(self):
+                pass  # pragma: no cover
 
 def test_method_cache_to_disk():
     my_class = MyClass()
@@ -189,15 +196,6 @@ def test_cache_to_disk_with_ignore_cache_expiration_and_force_cache_expiration()
     # Call the method for the second time (before cache expiration)
     result = my_class.my_method("foo", bar=test)
     assert my_class.number_of_method_calls[foo_baz_hash] == 2  # The number of calls should be 2 because even though the result is cached and the cache has not expired, as ignore_cache_expiration is True, the method is called again
-
-def test_cache_to_disk_on_property():
-    # this should generate an exception, as the property decorator must be defined before the cache_to_disk decorator
-    with pytest.raises(TypeError) as error_info:
-        class IncorrectUsageOfCacheToDisk:
-            @cache_to_disk
-            @property # this should fail, as the property decorator must be defined before the cache_to_disk decorator
-            def my_property(self):
-                pass  # pragma: no cover
 
 def test_cache_to_disk_when_force_is_off_and_cache_expiration_is_not_set():
     # this should result in no caching, as cache_expiration is not set

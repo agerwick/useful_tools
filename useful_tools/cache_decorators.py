@@ -127,85 +127,95 @@ print(myclass.cache_status) # gives info about the use of cache in the previous 
             if not hasattr(self, attr):
                 raise AttributeError(f"{self.__class__.__name__} does not have the attribute '{attr}', required by the @cache_to_disk decorator.")
 
-        arg_hash = make_arg_hash(args, kwargs)
+        result, self.last_saved_cache_file, cache_status = execute_with_cache(self, func, args, kwargs)
 
-        # create a dictionary to store the cache status for each function
+        # update cache_status attribute
         if not hasattr(self, "cache_status"):
             self.cache_status = {}
-        cache_status_key = f"{self.__class__.__name__}.{func.__name__}_{arg_hash}"
-        self.cache_status[cache_status_key] = []
-
-        # If cache is disabled, call the function and return the result
-        # when mocking requests, the cache is disabled
-        # this is done in handle_request() in main.py
-        if not self.cache_enabled:
-            self.cache_status[cache_status_key].append("cache_disabled")
-            self.cache_status[cache_status_key].append("method_called")
-            return func(self, *args, **kwargs)
+        self.cache_status.update(cache_status)
         
-        # Create cache directory if it doesn't exist
-        if not os.path.exists(self.cache_dir):
-            os.makedirs(self.cache_dir)
-        
-        # Create a unique filename based on the class name, method name and arguments
-        filename = f"{cache_status_key}.pkl"
-        filepath = os.path.join(self.cache_dir, filename)
-
-        read_from_cache = False
-        if self.ignore_cache_expiration:
-            if self.force_cache_expiration:
-                self.cache_status[cache_status_key].append("ignore_cache_expiration and force_cache_expiration are both True - force_cache_expiration takes precedence")
-            else:
-                self.cache_status[cache_status_key].append("cache_expiration_ignored")
-                read_from_cache = True
-
-        if self.force_cache_expiration:
-            self.cache_status[cache_status_key].append("cache_expiration_forced")
-            read_from_cache = False
-        else:
-            if self.cache_expiration is not None:
-                self.cache_status[cache_status_key].append(f"cache_expiration_set: {self.cache_expiration}s")
-                read_from_cache = True
-            else:
-                self.cache_status[cache_status_key].append("cache_expiration_not_set")
-                read_from_cache = False
-            
-        if read_from_cache:
-            if not os.path.exists(filepath):
-                self.cache_status[cache_status_key].append("cache_file_does_not_exist")
-            else:
-                self.cache_status[cache_status_key].append("cache_file_exists")
-                with open(filepath, 'rb') as f:
-                    cache_time, result = pickle.load(f)
-                    time_since_cache = time.time() - cache_time
-                    if self.ignore_cache_expiration \
-                    or time_since_cache < self.cache_expiration:
-                        self.cache_status[cache_status_key].append("cache_loaded")
-                        return result
-                    else:
-                        if time_since_cache < 10:
-                            time_since_cache_formatted = f"{time_since_cache:.3f}s"
-                        # the following lines are not covered by tests, as it is not possible to mock time.time()
-                        elif time_since_cache < 60:                                         #  pragma: no cover
-                            time_since_cache_formatted = f"{time_since_cache:.1f}s"         #  pragma: no cover
-                        elif time_since_cache < 3600:                                       #  pragma: no cover
-                            time_since_cache_formatted = f"{time_since_cache/60:.1f}m"      #  pragma: no cover
-                        else:                                                               #  pragma: no cover
-                            time_since_cache_formatted = f"{time_since_cache/3600:.1f}h"    #  pragma: no cover
-                        self.cache_status[cache_status_key].append(f"cache_expired: {time_since_cache_formatted} passed")
-        
-        # call the function - this will happen if the cache_expiration is not set or the cache file doesn't exist or is expired
-        result = func(self, *args, **kwargs)
-        self.cache_status[cache_status_key].append("method_called")
-
-        # If cache is enabled for the model (or cache is forced to expire), save the result to the cache
-        if self.cache_expiration is not None or self.force_cache_expiration:
-            with open(filepath, 'wb') as f:
-                pickle.dump((time.time(), result), f)
-                self.cache_status[cache_status_key].append("cache_saved")
-            self.last_saved_cache_file = filepath
         return result
+
     return wrapper
+
+def execute_with_cache(config_obj, func, args, kwargs):
+    arg_hash = make_arg_hash(args, kwargs)
+    last_saved_cache_file = None
+    cache_status = {}
+    cache_status_key = f"{func.__class__.__name__}.{func.__name__}_{arg_hash}"
+    cache_status[cache_status_key] = []
+
+    # If cache is disabled, call the function and return the result
+    # when mocking requests, the cache is disabled
+    # this is done in handle_request() in main.py
+    if not config_obj.cache_enabled:
+        cache_status[cache_status_key].append("cache_disabled")
+        cache_status[cache_status_key].append("method_called")
+        return func(config_obj, *args, **kwargs), None, cache_status
+    
+    # Create cache directory if it doesn't exist
+    if not os.path.exists(config_obj.cache_dir):
+        os.makedirs(config_obj.cache_dir)
+    
+    # Create a unique filename based on the class name, method name and arguments
+    filename = f"{cache_status_key}.pkl"
+    filepath = os.path.join(config_obj.cache_dir, filename)
+
+    read_from_cache = False
+    if config_obj.ignore_cache_expiration:
+        if config_obj.force_cache_expiration:
+            cache_status[cache_status_key].append("ignore_cache_expiration and force_cache_expiration are both True - force_cache_expiration takes precedence")
+        else:
+            cache_status[cache_status_key].append("cache_expiration_ignored")
+            read_from_cache = True
+
+    if config_obj.force_cache_expiration:
+        cache_status[cache_status_key].append("cache_expiration_forced")
+        read_from_cache = False
+    else:
+        if config_obj.cache_expiration is not None:
+            cache_status[cache_status_key].append(f"cache_expiration_set: {config_obj.cache_expiration}s")
+            read_from_cache = True
+        else:
+            cache_status[cache_status_key].append("cache_expiration_not_set")
+            read_from_cache = False
+        
+    if read_from_cache:
+        if not os.path.exists(filepath):
+            cache_status[cache_status_key].append("cache_file_does_not_exist")
+        else:
+            cache_status[cache_status_key].append("cache_file_exists")
+            with open(filepath, 'rb') as f:
+                cache_time, result = pickle.load(f)
+                time_since_cache = time.time() - cache_time
+                if config_obj.ignore_cache_expiration \
+                or time_since_cache < config_obj.cache_expiration:
+                    cache_status[cache_status_key].append("cache_loaded")
+                    return result, last_saved_cache_file, cache_status
+                else:
+                    if time_since_cache < 10:
+                        time_since_cache_formatted = f"{time_since_cache:.3f}s"
+                    # the following lines are not covered by tests, as it is not possible to mock time.time()
+                    elif time_since_cache < 60:                                         #  pragma: no cover
+                        time_since_cache_formatted = f"{time_since_cache:.1f}s"         #  pragma: no cover
+                    elif time_since_cache < 3600:                                       #  pragma: no cover
+                        time_since_cache_formatted = f"{time_since_cache/60:.1f}m"      #  pragma: no cover
+                    else:                                                               #  pragma: no cover
+                        time_since_cache_formatted = f"{time_since_cache/3600:.1f}h"    #  pragma: no cover
+                    cache_status[cache_status_key].append(f"cache_expired: {time_since_cache_formatted} passed")
+    
+    # call the function - this will happen if the cache_expiration is not set or the cache file doesn't exist or is expired
+    result = func(config_obj, *args, **kwargs)
+    cache_status[cache_status_key].append("method_called")
+
+    # If cache is enabled for the model (or cache is forced to expire), save the result to the cache
+    if config_obj.cache_expiration is not None or config_obj.force_cache_expiration:
+        with open(filepath, 'wb') as f:
+            pickle.dump((time.time(), result), f)
+            cache_status[cache_status_key].append("cache_saved")
+        last_saved_cache_file = filepath
+    
+    return result, last_saved_cache_file, cache_status
 
 def delete_last_saved_cache_file(func):
     """
