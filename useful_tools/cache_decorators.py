@@ -121,13 +121,13 @@ print(myclass.cache_status) # gives info about the use of cache in the previous 
     
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        # give a useful error message if the class doesn't have the required attributes
-        required_attributes = ["cache_enabled", "cache_dir", "cache_expiration", "force_cache_expiration", "ignore_cache_expiration"]
-        for attr in required_attributes:
-            if not hasattr(self, attr):
-                raise AttributeError(f"{self.__class__.__name__} does not have the attribute '{attr}', required by the @cache_to_disk decorator.")
+        # # give a useful error message if the class doesn't have the required attributes
+        # required_attributes = ["cache_enabled", "cache_dir", "cache_expiration", "force_cache_expiration", "ignore_cache_expiration"]
+        # for attr in required_attributes:
+        #     if not hasattr(self, attr):
+        #         raise AttributeError(f"{self.__class__.__name__} does not have the attribute '{attr}', required by the @cache_to_disk decorator.")
 
-        result, self.last_saved_cache_file, cache_status = execute_with_cache(self, func, args, kwargs)
+        result, self.last_saved_cache_file, cache_status = execute_with_instance_and_cache(self, func, args, kwargs)
 
         # update cache_status attribute
         if not hasattr(self, "cache_status"):
@@ -138,8 +138,68 @@ print(myclass.cache_status) # gives info about the use of cache in the previous 
 
     return wrapper
 
-def execute_with_cache(config_obj, func, args, kwargs):
+# TODO for v.1.00: rewrite this to use a more generic function that takes a config object as an argument in addition to the (optional) instance and function/method
+# the input params for config_obj and instance should be separate, and only config_obj should be required
+# it should return only the result and the cache status, and the last_saved_cache_file should be set as an attribute on the config object
+# as it is not, it has become messy, as the origin of the decorator was to be used on a method.
+
+def execute_with_cache(func, args, kwargs, config=None):
+    """
+    Executes a function with caching based on the provided configuration. 
+    This is meant to be used on a function, rather than a method.
+
+    Args:
+        func: The function to be executed.
+        args: The positional arguments to be passed to the function.
+        kwargs: The keyword arguments to be passed to the function.
+        config: The configuration object that determines how caching is handled.
+
+    Returns:
+        The result of the function execution.
+
+    Raises:
+        ValueError: If the config object is not provided or if cache is not enabled in the config.
+    """
+    if config is not None:
+        # check if cache_enabled is defined in the config
+        if hasattr(config, "cache_enabled"):
+            result, delete_last_saved_cache_file, cache_status = execute_with_instance_and_cache(None, func, args, kwargs, config=config)
+            return result, delete_last_saved_cache_file, cache_status
+        else:
+            raise ValueError("cache_enabled is not in the config -- is this a config object?")
+    else:
+        raise ValueError("config is required when using the execute_with_cache function")
+
+def execute_with_instance_and_cache(instance, func, args, kwargs, config=None):
+    """
+    Execute the function and cache the result to disk.
+
+    Parameters:
+    instance (object): The instance of the class that the function belongs to. If the function is not a method, this should be None.
+    func (function): The function to be executed and cached.
+    args (tuple): The positional arguments to be passed to the function.
+    kwargs (dict): The keyword arguments to be passed to the function.
+    config (object, optional): The configuration object that determines the caching behavior. Defaults to None. If not provided, the cache_enabled attribute must be set on the instance.
+
+    Returns:
+    tuple: A tuple containing the result of the function execution, the path of the last saved cache file, and the cache status dictionary.
+    """
+    if config is None:
+        config = instance
+
+    # give a useful error message if the class doesn't have the required attributes
+    required_attributes = ["cache_enabled", "cache_dir", "cache_expiration", "force_cache_expiration", "ignore_cache_expiration"]
+    for attr in required_attributes:
+        if not hasattr(config, attr):
+            if config == instance: # the function is a method, and the config is set on the instance
+                config_class_name = instance.__class__.__name__
+            else:
+                config_class_name = config.__name__
+            config_class_name = config.__class__.__name__
+            raise AttributeError(f"{config_class_name} does not have the attribute '{attr}', required by the @cache_to_disk decorator.")
+
     arg_hash = make_arg_hash(args, kwargs)
+
     last_saved_cache_file = None
     cache_status = {}
     cache_status_key = f"{func.__class__.__name__}.{func.__name__}_{arg_hash}"
@@ -148,33 +208,33 @@ def execute_with_cache(config_obj, func, args, kwargs):
     # If cache is disabled, call the function and return the result
     # when mocking requests, the cache is disabled
     # this is done in handle_request() in main.py
-    if not config_obj.cache_enabled:
+    if not config.cache_enabled:
         cache_status[cache_status_key].append("cache_disabled")
         cache_status[cache_status_key].append("method_called")
-        return func(config_obj, *args, **kwargs), None, cache_status
+        return execute_func(func, instance, *args, **kwargs), None, cache_status
     
     # Create cache directory if it doesn't exist
-    if not os.path.exists(config_obj.cache_dir):
-        os.makedirs(config_obj.cache_dir)
+    if not os.path.exists(config.cache_dir):
+        os.makedirs(config.cache_dir)
     
     # Create a unique filename based on the class name, method name and arguments
     filename = f"{cache_status_key}.pkl"
-    filepath = os.path.join(config_obj.cache_dir, filename)
+    filepath = os.path.join(config.cache_dir, filename)
 
     read_from_cache = False
-    if config_obj.ignore_cache_expiration:
-        if config_obj.force_cache_expiration:
+    if config.ignore_cache_expiration:
+        if config.force_cache_expiration:
             cache_status[cache_status_key].append("ignore_cache_expiration and force_cache_expiration are both True - force_cache_expiration takes precedence")
         else:
             cache_status[cache_status_key].append("cache_expiration_ignored")
             read_from_cache = True
 
-    if config_obj.force_cache_expiration:
+    if config.force_cache_expiration:
         cache_status[cache_status_key].append("cache_expiration_forced")
         read_from_cache = False
     else:
-        if config_obj.cache_expiration is not None:
-            cache_status[cache_status_key].append(f"cache_expiration_set: {config_obj.cache_expiration}s")
+        if config.cache_expiration is not None:
+            cache_status[cache_status_key].append(f"cache_expiration_set: {config.cache_expiration}s")
             read_from_cache = True
         else:
             cache_status[cache_status_key].append("cache_expiration_not_set")
@@ -188,8 +248,8 @@ def execute_with_cache(config_obj, func, args, kwargs):
             with open(filepath, 'rb') as f:
                 cache_time, result = pickle.load(f)
                 time_since_cache = time.time() - cache_time
-                if config_obj.ignore_cache_expiration \
-                or time_since_cache < config_obj.cache_expiration:
+                if config.ignore_cache_expiration \
+                or time_since_cache < config.cache_expiration:
                     cache_status[cache_status_key].append("cache_loaded")
                     return result, last_saved_cache_file, cache_status
                 else:
@@ -205,17 +265,23 @@ def execute_with_cache(config_obj, func, args, kwargs):
                     cache_status[cache_status_key].append(f"cache_expired: {time_since_cache_formatted} passed")
     
     # call the function - this will happen if the cache_expiration is not set or the cache file doesn't exist or is expired
-    result = func(config_obj, *args, **kwargs)
+    result = execute_func(func, instance, *args, **kwargs)
     cache_status[cache_status_key].append("method_called")
 
     # If cache is enabled for the model (or cache is forced to expire), save the result to the cache
-    if config_obj.cache_expiration is not None or config_obj.force_cache_expiration:
+    if config.cache_expiration is not None or config.force_cache_expiration:
         with open(filepath, 'wb') as f:
             pickle.dump((time.time(), result), f)
             cache_status[cache_status_key].append("cache_saved")
         last_saved_cache_file = filepath
     
     return result, last_saved_cache_file, cache_status
+
+def execute_func(func, instance, *args, **kwargs):
+    if instance is not None:
+        return func(instance, *args, **kwargs)
+    else:
+        return func(*args, **kwargs)
 
 def delete_last_saved_cache_file(func):
     """
