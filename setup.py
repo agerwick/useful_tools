@@ -2,12 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='useful_tools',
-    version='0.18',
+    version='0.19',
     packages=find_packages(),
     description='A collection of useful decorators and other tools I use on various projects',
     author='Ronny Ager-Wick',
     author_email='ronny@ager-wick.com',
-    url='https://github.com/agerwick/useful_tools',  # replace with your repo URL
+    url='https://github.com/agerwick/useful_tools',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',

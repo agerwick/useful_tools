@@ -1,7 +1,9 @@
+import re
 import os
 import time
 import pickle
 import hashlib
+import inspect
 from functools import wraps
 
 # decorators to cache the result of a function
@@ -202,7 +204,13 @@ def execute_with_instance_and_cache(instance, func, args, kwargs, config=None):
 
     last_saved_cache_file = None
     cache_status = {}
-    cache_status_key = f"{func.__class__.__name__}.{func.__name__}_{arg_hash}"
+
+    cache_status_key = f"{inspect.getmodule(func).__name__}.{func.__qualname__}.{arg_hash}"
+    # remove invalid characters from the key (as it's also used as a filename)
+    cache_status_key = re.sub(r'[<>:"/\\|?*]', '', cache_status_key)
+    # Note: for a function defined inside another function, __qualname__ may look like this: 'test_execute_with_instance_and_cache_disabled.<locals>.test_func'
+    # it is therefore crucial to remove the invalid characters from the key, as it is used as a filename
+
     cache_status[cache_status_key] = []
 
     # If cache is disabled, call the function and return the result
