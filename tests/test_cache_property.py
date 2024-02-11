@@ -1,5 +1,5 @@
 import pytest
-from useful_tools.cache_decorators import cache_property
+from useful_tools.cache_to_memory import cache_property
 
 class MyClass:
     number_of_calls = 0

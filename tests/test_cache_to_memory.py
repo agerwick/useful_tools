@@ -1,5 +1,5 @@
 import pytest
-from useful_tools.cache_decorators import cache_to_memory
+from useful_tools.cache_to_memory import cache_to_memory
 
 class MyClass:
     def __init__(self):

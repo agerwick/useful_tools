@@ -2,7 +2,7 @@ import pytest
 import time
 import shutil
 import inspect
-from useful_tools.cache_decorators import cache_to_disk, make_arg_hash
+from useful_tools.cache_to_disk import cache_to_disk, make_arg_hash
 
 def _test_name():
     """
@@ -49,7 +49,10 @@ def setup_module(module):
     pass
 
 def teardown_module(module):
-    shutil.rmtree(MyClass.cache_dir)
+    try:
+        shutil.rmtree(MyClass.cache_dir)
+    except: # pragma: no cover
+        pass # pragma: no cover
 
 def test_property_cache_to_disk():
     my_class = MyClass()
@@ -311,3 +314,39 @@ def test_cache_with_kwargs_in_different_order_with_other_random_calls_between_th
     # call with same arguments in a different order, which should be cached
     my_class.my_method(spanish = "español", do_you_speak = "hablas", test = test) # should be cached, so no new call
     assert my_class.number_of_method_calls_total == 4
+
+def test_cache_to_disk_with_corrupt_cache_file():
+    my_class = MyClass()
+    my_class.force_cache_expiration = True
+    test = _test_name()
+    # call the method with some arguments, generating a new cache file
+    my_class.my_method("foo", bar=test) # call#1
+    # corrupt the cache file
+    with open(my_class.cache_status_dict["last_saved_cache_file"], "w") as f:
+        f.write("")
+    # call the method again, which should result in a new call
+    my_class.my_method("foo", bar=test) # call#2
+    assert my_class.number_of_method_calls_total == 2
+
+def test_formatted_cache_status():
+    my_class = MyClass()
+    test = _test_name()
+    # call the method with some arguments, generating a new cache file
+    my_class.my_method(test) # call#1
+    # make sure the result of cache_status is a string
+    assert my_class.cache_status.__class__ == str
+    assert my_class.cache_status_dict.__class__ == dict
+
+def test_if_we_get_empty_cache_status_when_called_before_method():
+    class MyOtherClass: 
+        # we're using a different class here, because we want to test the cache_status property before the method has been called, and we don't want the other tests to interfere with this one
+        @cache_to_disk
+        def my_method(self, *args, **kwargs): # pragma: no cover
+            pass # pragma: no cover
+    my_class = MyOtherClass()
+    # check that we get an AttributeError when calling cache_status before the method has been called
+    with pytest.raises(AttributeError):
+        my_class.cache_status
+    # this would be ideal:
+    # assert my_class.cache_status == ""
+    # but it's not possible, because the cache_status property is set when the decorated method is called, so it doesn't exist at this point.

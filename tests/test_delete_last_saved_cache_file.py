@@ -1,56 +1,39 @@
 import os
-from useful_tools.cache_decorators import delete_last_saved_cache_file
+from useful_tools.cache_to_disk import cache_to_disk
 
 class MyClass:
+    cache_enabled = True
+    cache_dir = "test_cache"
+    cache_expiration = 2
+    force_cache_expiration = False
+    ignore_cache_expiration = False
+
     def __init__(self):
-        self.last_saved_cache_file = "cache_file.txt"
+        pass
+        #self.last_saved_cache_file = "cache_file.txt"
 
-    @delete_last_saved_cache_file
-    def delete_cache(self):
-        pass # pragma: no cover
+    @cache_to_disk # this will define delete_last_saved_cache_file on the class
+    def dummy(self, *args, **kwargs):
+        return (self, args, kwargs)
 
-class MyIncorrectlySetUpClass:
-    @delete_last_saved_cache_file
-    def delete_cache(self):
-        pass # pragma: no cover
 
 def test_delete_last_saved_cache_file():
     my_class = MyClass()
-    cache_file = "my_dummy_cache_file.txt"
-    my_class.last_saved_cache_file = cache_file
-
-    # Create a dummy cache file
-    with open(cache_file, "w") as file:
-        file.write("dummy cache data")
-
-    # check that file exists
-    assert os.path.exists(cache_file)
-
-    # Call the delete_cache method
-    assert cache_file == my_class.delete_cache()
-
-    # Check if the cache file is deleted
-    assert not os.path.exists(cache_file)
+    my_class.force_cache_expiration = True # force cache expiration, so any existing cache file will be deleted
+    my_class.dummy("test_delete_last_saved_cache_file") # this will create a cache file
+    cache_file = my_class.cache_status_dict["last_saved_cache_file"]
+    assert os.path.exists(cache_file) # check that file exists
+    assert cache_file == my_class.delete_last_saved_cache_file() # delete the cache file
+    assert not os.path.exists(cache_file) # Check if the cache file is actually deleted
 
 def test_delete_last_saved_cache_file_with_non_existent_file():
     my_class = MyClass()
-    cache_file = "non-existing_file.txt"
-    my_class.last_saved_cache_file = cache_file
+    my_class.ignore_cache_expiration = True # ignore cache expiration, so any existing cache file will not be deleted
+    my_class.dummy("test_delete_last_saved_cache_file") # this will create a cache file if none exists
+    cache_file = my_class.cache_status_dict["last_saved_cache_file"]
+    os.path.exists(cache_file) # check that file exists
+    deleted_cache_file = my_class.delete_last_saved_cache_file() # delete the cache file
+    assert cache_file == deleted_cache_file # Check if the cache file is actually deleted
+    assert not os.path.exists(cache_file) # Check if the cache file is actually deleted
+    assert None == my_class.delete_last_saved_cache_file() # delete the cache file AGAIN, which should return None
 
-    # check that file does not exist
-    assert not os.path.exists(cache_file)
-
-    # Call the delete_cache method
-    assert None == my_class.delete_cache()
-
-    # Check if the cache file is deleted
-    assert not os.path.exists(cache_file)
-
-def test_delete_last_saved_cache_file_with_non_existent_attribute():
-    my_class = MyIncorrectlySetUpClass()
-
-    # check that file does not exist
-    assert not hasattr(my_class, "last_saved_cache_file")
-
-    # Call the delete_cache method and check that it does not raise an exception
-    assert None == my_class.delete_cache()
