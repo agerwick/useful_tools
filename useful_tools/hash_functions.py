@@ -11,7 +11,7 @@ def make_hashable(obj):
         return frozenset((k, make_hashable(v)) for k, v in sorted(obj.items()))
     return obj
 
-def make_arg_hash(args, kwargs):
+def make_arg_hash(args, kwargs, supplemental_hash_info=None):
     """make a hash of the arguments that can be used to check if the arguments are the same as something that was previously cached"""
     # preserve the order or args, so calling a function with the same arguments in a different order will NOT give the same hash
     # this is important for the cache, because the cache should not be used if the arguments are different
@@ -19,6 +19,7 @@ def make_arg_hash(args, kwargs):
     # the arguments are put in a list of one item before being converted to a frozenset to preserve the order of the arguments
     hashable_args = make_hashable([args])
     hashable_kwargs = make_hashable(kwargs)
-    encoded_arg_str = f"{hashable_args}_{hashable_kwargs}".encode()
+    hashable_supplemental_hash_info = make_hashable(supplemental_hash_info)
+    encoded_arg_str = f"{hashable_args}_{hashable_kwargs}_{hashable_supplemental_hash_info}".encode()
     sha256hash = hashlib.sha256(encoded_arg_str).hexdigest()
     return sha256hash

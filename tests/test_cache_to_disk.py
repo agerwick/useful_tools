@@ -24,6 +24,10 @@ class MyClass:
         self.number_of_method_calls_total = 0
         self.force_cache_expiration = False
         self.ignore_cache_expiration = False
+        self.important_info = "this is important info"
+
+    def __repr__(self):
+        return f"MyClass(important_info='{format(self.important_info)}')"
 
     @property
     @cache_to_disk
@@ -217,8 +221,6 @@ def test_cache_to_disk_when_force_is_off_and_cache_expiration_is_not_set():
     result = my_class.my_method("foo", bar=test)
     assert my_class.number_of_method_calls[foo_bar_hash] == 2  # The number of calls should be 2 because it is not possible to cache when cache_expiration is not set
 
-
-#### rewrite these tests below, they're not good at all
 #### find a different way to test the number of method calls as it's getting too complex to have to make a hash of the arguments
 #### maybe just use a global variable that is incremented each time the method is called, and then check that variable instead, like on the cache_to_memory tests
 #### or maybe both
@@ -350,3 +352,16 @@ def test_if_we_get_empty_cache_status_when_called_before_method():
     # this would be ideal:
     # assert my_class.cache_status == ""
     # but it's not possible, because the cache_status property is set when the decorated method is called, so it doesn't exist at this point.
+
+def test_that_using_supplemental_hash_info_produces_different_cache_files():
+    my_class = MyClass()
+    test = _test_name()
+    # call the method with some arguments, generating a new cache file
+    my_class.my_method(test) # call#1
+    cache_file_name1 = my_class.cache_status_dict["last_saved_cache_file"]
+    my_class.important_info = "this is different"
+    # call the method again, with the same arguments, but with different supplemental_hash_info
+    my_class.my_method(test) # call#2
+    cache_file_name2 = my_class.cache_status_dict["last_saved_cache_file"]
+    assert my_class.number_of_method_calls_total == 2
+    assert cache_file_name1 != cache_file_name2

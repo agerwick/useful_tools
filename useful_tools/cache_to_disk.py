@@ -171,7 +171,7 @@ def execute_with_instance_and_cache(instance, func, args, kwargs, config=None):
             config_class_name = config.__class__.__name__
             raise AttributeError(f"{config_class_name} does not have the attribute '{attr}', required by the @cache_to_disk decorator.")
 
-    arg_hash = make_arg_hash(args, kwargs)
+    arg_hash = make_arg_hash(args, kwargs, supplemental_hash_info=repr(instance))
 
     cache_status_dict = {}
 
