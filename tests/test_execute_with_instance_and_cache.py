@@ -4,7 +4,6 @@ import time
 import shutil
 import inspect
 import pytest
-from unittest.mock import MagicMock
 from useful_tools.cache_to_disk import execute_with_instance_and_cache
 
 def _test_name():
