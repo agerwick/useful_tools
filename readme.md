@@ -186,6 +186,30 @@ print(myclass.cache_status) # gives info about the use of cache in the previous 
 print("You can see from the cache status that the cache file was deleted.")
 ```
 
+## modified_dataclass
+
+A decorator that adds some extra features to @dataclass
+example:
+
+```python
+@modified_dataclass(simplify_repr=['session'], exclude_from_repr=['other_field'], exclude_defaults_from_repr=True)
+class Test:
+    session: 'Session'
+    other_field: int
+    field_with_default: str = "default_value"
+    important_field: str
+
+t = Test(session="session", other_field=1, important_field="important")
+print(t)
+# Test(session=<class 'str'>, important_field=important)
+```
+
+Compared with the default repr:
+
+- session is replaced by its type
+- other_field is excluded
+- field_with_default is excluded because it has a default value
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
@@ -194,9 +218,7 @@ Please make sure to update tests as appropriate.
 
 ## Run tests and generate coverage report
 
-```
-coverage run -m pytest ; coverage xml
-```
+```coverage run -m pytest ; coverage xml```
 
 ## Author
 
