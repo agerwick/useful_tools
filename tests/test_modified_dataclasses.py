@@ -1,7 +1,12 @@
+import os
+import sys
 import pytest
 
-from useful_tools.modified_dataclasses import modified_dataclass
+if not any('pytest' in arg for arg in sys.argv):
+    # running the file directly, not as a test
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) # add the parent directory to the path # pragma: no cover
 
+from useful_tools.modified_dataclasses import modified_dataclass
 
 def test_no_defaults():
     @modified_dataclass(exclude_defaults_from_repr=True)
@@ -34,3 +39,27 @@ def test_simplify(a = 0):
 
     s = Simplify(a = 0, and_this = "not simplified")
     assert repr(s) == "Simplify(a=0, b=1, simplify_this=<class 'str'>, and_this=<class 'str'>)"
+
+def test_replace_repr_with_attr():
+    @modified_dataclass(replace_repr_with_attr={"replace_this": "replace_with_this"})
+    class Replace:
+        a: int
+        b: int = 1
+        replace_this: str = "should be replaced"
+        replace_with_this: str = "replaced"
+
+    r = Replace(a = 0, b = 3)
+    assert repr(r) == "Replace(a=0, b=3, replace_this=replaced, replace_with_this=replaced)"
+
+def test_replace_repr_with_attr_missing():
+    @modified_dataclass(replace_repr_with_attr={"replace_this": "attr_on_Replace_class_that_does_not_exist"})
+    class Replace:
+        a: int
+        b: int = 1
+        replace_this: str = "should be replaced"
+
+    # construct the class
+    r = Replace(a = 0, b = 3) # this does not raise an error
+    # the error is only raised when the repr method is called (such as when using print)
+    with pytest.raises(AttributeError):
+        print(r) # pragma: no cover
