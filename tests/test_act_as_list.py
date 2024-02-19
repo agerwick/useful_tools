@@ -3,6 +3,17 @@ from useful_tools.act_as_list import act_as_list
 
 @act_as_list('objects')
 class MyClassThatLooksLikeAList:
+    """docstring for MyClassThatLooksLikeAList"""
+    def __init__(self, objects = []):
+        self.objects = objects
+    def in_uppercase(self):
+        return " ".join(self).upper()
+    def contains_both_hello_and_world(self):
+        return "hello" in self and "world" in self
+
+@act_as_list('objects')
+class MyClassThatLooksLikeAList2:
+    """docstring for MyClassThatLooksLikeAList2"""
     def __init__(self, objects = []):
         self.objects = objects
     def in_uppercase(self):
@@ -12,6 +23,7 @@ class MyClassThatLooksLikeAList:
 
 @act_as_list('actual_list')
 class MyClassWithExtraAttrs:
+    """docstring for MyClassWithExtraAttrs"""
     def __init__(self, actual_list = [], extra_attr = None):
         if extra_attr == None:
             raise Exception("extra_attr is required")
@@ -141,6 +153,27 @@ def test_class_and_class_name():
     fake_list = MyClassThatLooksLikeAList(["hello", "world"])
     assert fake_list.__class__.__name__ == "MyClassThatLooksLikeAList"
     assert fake_list.__class__ == MyClassThatLooksLikeAList
+
+def test_class_and_class_name_when_used_on_multiple_classes():
+    fake_list1 = MyClassThatLooksLikeAList(["hello", "world"])
+    fake_list2 = MyClassThatLooksLikeAList2(["hello", "world"])
+    fake_list3 = MyClassWithExtraAttrs(["hello", "world"], extra_attr="fubar")
+
+    # in this test we will test if the class, class name and docstring are set correctly
+    # we test this on multiple classes to make sure the decorator does not interfere with other classes
+    docstring_addition = "\n\n`@act_as_list:`\nThis class has been decorated with `@act_as_list` - it looks and acts like a list.\n"
+
+    assert fake_list1.__class__.__name__ == "MyClassThatLooksLikeAList"
+    assert MyClassThatLooksLikeAList.__doc__ == "docstring for MyClassThatLooksLikeAList" + docstring_addition, "MyClassThatLooksLikeAList has incorrect docstring"
+    assert fake_list1.__class__ == MyClassThatLooksLikeAList
+
+    assert fake_list2.__class__.__name__ == "MyClassThatLooksLikeAList2"
+    assert fake_list2.__class__ == MyClassThatLooksLikeAList2
+    assert MyClassThatLooksLikeAList2.__doc__ == "docstring for MyClassThatLooksLikeAList2" + docstring_addition, "MyClassThatLooksLikeAList2 has incorrect docstring"
+
+    assert fake_list3.__class__ == MyClassWithExtraAttrs
+    assert fake_list3.__class__.__name__ == "MyClassWithExtraAttrs"
+    assert MyClassWithExtraAttrs.__doc__ == "docstring for MyClassWithExtraAttrs" + docstring_addition, "MyClassWithExtraAttrs has incorrect docstring"
 
 def test_add_with_class():
     fake_list1 = MyClassThatLooksLikeAList(["hello", "world"])
