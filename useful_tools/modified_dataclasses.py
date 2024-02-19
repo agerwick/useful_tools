@@ -1,6 +1,9 @@
 import dataclasses
 from operator import attrgetter
 
+class ModifiedDataclassTypeError(TypeError):
+    pass
+
 def modified_dataclass(replace_repr_with_attr={}, simplify_repr=[], exclude_from_repr=[], exclude_defaults_from_repr=False):
     """
     A decorator that modifies the string representation (__repr__) of a dataclass object.
@@ -30,6 +33,25 @@ def modified_dataclass(replace_repr_with_attr={}, simplify_repr=[], exclude_from
             cls: The decorated class.
 
         """
+        # check the types of the attributes
+        if not isinstance(replace_repr_with_attr, dict):
+            raise ModifiedDataclassTypeError(f"replace_repr_with_attr must be a dictionary, not {replace_repr_with_attr.__class__.__name__}")
+        if not isinstance(simplify_repr, list):
+            raise ModifiedDataclassTypeError(f"simplify_repr must be a list, not {simplify_repr.__class__.__name__}")
+        if not isinstance(exclude_from_repr, list):
+            raise ModifiedDataclassTypeError(f"exclude_from_repr must be a list, not {exclude_from_repr.__class__.__name__}")
+        if not isinstance(exclude_defaults_from_repr, bool):
+            raise ModifiedDataclassTypeError(f"exclude_defaults_from_repr must be a boolean, not {exclude_defaults_from_repr.__class__.__name__}")
+        
+        if not all(isinstance(attr, str) for attr in replace_repr_with_attr.keys()):
+            raise ModifiedDataclassTypeError(f"All keys in replace_repr_with_attr must be strings. They represent the attributes of the class {cls.__class__.__name__} which value should be replaces.")
+        if not all(isinstance(attr, str) for attr in replace_repr_with_attr.values()):
+            raise ModifiedDataclassTypeError(f"All values in replace_repr_with_attr must be strings. They represent the attributes of the class {cls.__class__.__name__} which value should be used in the string representation instead of the original attribute.")
+        if not all(isinstance(attr, str) for attr in simplify_repr):
+            raise ModifiedDataclassTypeError(f"All elements in simplify_repr must be strings. They represent the attributes of the class {cls.__class__.__name__} which value should be simplified.")
+        if not all(isinstance(attr, str) for attr in exclude_from_repr):
+            raise ModifiedDataclassTypeError(f"All elements in exclude_from_repr must be strings. They represent the attributes of the class {cls.__class__.__name__} which value should be excluded from the string representation.")
+
         cls = dataclasses.dataclass(cls, repr=False)
 
         def new_repr(self):

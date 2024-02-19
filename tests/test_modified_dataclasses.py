@@ -6,7 +6,7 @@ if not any('pytest' in arg for arg in sys.argv):
     # running the file directly, not as a test
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) # add the parent directory to the path # pragma: no cover
 
-from useful_tools.modified_dataclasses import modified_dataclass
+from useful_tools.modified_dataclasses import modified_dataclass, ModifiedDataclassTypeError
 
 def test_no_defaults():
     @modified_dataclass(exclude_defaults_from_repr=True)
@@ -63,3 +63,51 @@ def test_replace_repr_with_attr_missing():
     # the error is only raised when the repr method is called (such as when using print)
     with pytest.raises(AttributeError):
         print(r) # pragma: no cover
+
+def test_TypeError_when_wrong_type_is_passed_to_replace_repr_with_attr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(replace_repr_with_attr=0)
+        class Test: # pragma: no cover
+            pass # pragma: no cover
+
+def test_TypeError_when_wrong_type_is_used_in_dict_keys_in_replace_repr_with_attr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(replace_repr_with_attr={0: "a"})
+        class Test: # pragma: no cover
+            pass
+
+def test_TypeError_when_wrong_type_is_used_in_dict_values_in_replace_repr_with_attr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(replace_repr_with_attr={"a": 0})
+        class Test: # pragma: no cover
+            pass
+
+def test_TypeError_when_wrong_type_is_passed_to_simplify_repr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(simplify_repr=0)
+        class Test: # pragma: no cover
+            pass
+
+def test_TypeError_when_wrong_type_is_passed_as_list_elements_in_simplify_repr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(simplify_repr=[0])
+        class Test: # pragma: no cover
+            pass
+
+def test_TypeError_when_wrong_type_is_passed_to_exclude_from_repr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(exclude_from_repr=0)
+        class Test: # pragma: no cover
+            pass
+
+def test_TypeError_when_wrong_type_is_passed_as_list_elements_in_exclude_from_repr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(exclude_from_repr=[0])
+        class Test: # pragma: no cover
+            pass
+
+def test_TypeError_when_wrong_type_is_passed_to_exclude_defaults_from_repr():
+    with pytest.raises(ModifiedDataclassTypeError):
+        @modified_dataclass(exclude_defaults_from_repr=0)
+        class Test: # pragma: no cover
+            pass
