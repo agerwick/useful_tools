@@ -41,6 +41,9 @@ def test_simplify(a = 0):
     assert repr(s) == "Simplify(a=0, b=1, simplify_this=<class 'str'>, and_this=<class 'str'>)"
 
 def test_replace_repr_with_attr():
+    # test incorrect usage -- the first param represents the attribute to be replaced, and the second param represents the attribute ON THAT ATTIRBUTE to replace it with
+    # in this case, the attribute "replace_this" is a string, so only attributes of string are allowed
+    # "replace_with_this" is not an attribute of string, so this should raise an AttributeError
     @modified_dataclass(replace_repr_with_attr={"replace_this": "replace_with_this"})
     class Replace:
         a: int
@@ -48,8 +51,29 @@ def test_replace_repr_with_attr():
         replace_this: str = "should be replaced"
         replace_with_this: str = "replaced"
 
-    r = Replace(a = 0, b = 3)
-    assert repr(r) == "Replace(a=0, b=3, replace_this=replaced, replace_with_this=replaced)"
+    # check that the following statement fails with an AttributeError
+    with pytest.raises(AttributeError):
+        r = Replace(a = 0, b = 3) # pragma: no cover
+        repr(r)
+        # assert repr(r) == "Replace(a=0, b=3, replace_this=replaced, replace_with_this=replaced)"
+
+def test_replace_repr_with_attr_of_different_object():
+    # test correct usage -- the first param represents the attribute to be replaced, and the second param represents the attribute ON THAT ATTIRBUTE to replace it with
+    # in this case, the attribute "session" is an object, so any attribute of that object is allowed, and "hash" is an attribute of the object "Session"
+    class Session:
+        def __init__(self, hash):
+            self.hash = hash
+            self.other_var = "other_var"
+
+    @modified_dataclass(replace_repr_with_attr={"session": "hash"}) # in the string representation of Test, replace the string representation of session with session.hash
+    class Test():
+        id: int = None
+        status: str = None
+        session: 'Session' = None
+
+    session = Session(hash = "ABCD1234XYZ")
+    t = Test(id = 1, status = "running", session = session)
+    assert repr(t) == "Test(id=1, status=running, session=ABCD1234XYZ)"
 
 def test_replace_repr_with_attr_missing():
     @modified_dataclass(replace_repr_with_attr={"replace_this": "attr_on_Replace_class_that_does_not_exist"})
