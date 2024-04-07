@@ -44,6 +44,7 @@ In this code, MyClassThatLooksLikeAList behaves like a list, with the list-like 
 But, unlike a list, you can define your own methods and properties on this class.
 
 ### Adding @act_as_list objects with other @act_as_list objects or lists
+
 When adding another list or list_like object to an @act_as_list object, it will return a list object by default.
 The reason for this is that the decorator is not aware of the required attributes for the constructor method of the decorated class.
 If you add a _from_list() method to the decorated class, the list will be passed to this method and it will return the result of that instead.
@@ -68,16 +69,14 @@ result = fake_list + ["foo", "bar"]
 print(result) # ["hello", "world", "foo", "bar"]
 print(result.__class__) # MyClassWithExtraAttrs # because the class has a _from_list method, it returns the original class
 # if the _from_list class was not defined, the resulting class would be a list
-
 ```
-
-
 
 ## Cache Decorators
 
 The `cache_decorators.py` module provides decorators to cache the result of a function or property. This is useful to avoid sending the same request multiple times.
 
 ### cache_to_memory
+
 The `cache_to_memory` decorator caches the result of a method to memory. Here's an example of how to use it:
 
 ```python
@@ -139,6 +138,7 @@ class MyClass:
 In this code, the result of `my_property` is cached to disk the first time it's accessed. Subsequent accesses will return the cached result, unless the cache has expired.
 
 You can test it like this:
+
 ```python
 obj = MyClass()
 obj.my_property
@@ -158,6 +158,7 @@ This is used when the response is invalid or the data is not usable,
 in order to prevent the cache from being used in the next request
 
 Usage:
+
 ```python
 from useful_tools.cache_decorators import cache_to_disk, delete_last_saved_cache_file
 class MyClass:
