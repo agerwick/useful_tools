@@ -211,6 +211,24 @@ Compared with the default repr:
 - other_field is excluded
 - field_with_default is excluded because it has a default value
 
+## exit of already running
+
+Function to check if the script is already running by checking the PID in the pid file.
+If the script is already running, it will exit the script.
+
+```python
+from useful_tools import exit_if_already_running
+# set pid file name to the name of this script with .pid extension
+pid_file = os.path.basename(__file__).replace(".py", ".pid")
+exit_if_already_running(pid_file)
+
+# do stuff here
+
+os.remove(pid_file) # Delete the PID file
+```
+
+Even if the script exists before the PID file is deleted, the function will still work, as it checks if the PID exists.
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
