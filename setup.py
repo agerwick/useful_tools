@@ -2,12 +2,15 @@ from setuptools import setup, find_packages
 
 setup(
     name='useful_tools',
-    version='0.26.01',
+    version='0.26.2',
     packages=find_packages(),
     description='A collection of useful decorators and other tools I use on various projects',
     author='Ronny Ager-Wick',
     author_email='ronny@ager-wick.com',
     url='https://github.com/agerwick/useful_tools',
+    install_requires=[
+        'psutil'
+    ],
     classifiers=[
         'Development Status :: 2 - Beta',
         'Intended Audience :: Developers',
