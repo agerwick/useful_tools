@@ -211,7 +211,7 @@ Compared with the default repr:
 - other_field is excluded
 - field_with_default is excluded because it has a default value
 
-## exit of already running
+## exit if already running
 
 Function to check if the script is already running by checking the PID in the pid file.
 If the script is already running, it will exit the script.
@@ -228,6 +228,23 @@ os.remove(pid_file) # Delete the PID file
 ```
 
 Even if the script exists before the PID file is deleted, the function will still work, as it checks if the PID exists.
+
+## redirect_stdout
+
+Context manager to redirect the output of a function call.
+Typically used when you call a function that outputs to the terminal and you want to avoid outputting to the terminal because it will make the logfile cluttered.
+
+### Usage
+
+```python
+with redirect_stdout() as output:
+    print("This is printed to the console")
+
+# Now you can ignore the output if you want
+# or you can get the output of the function call as a string
+output_string = output.getvalue()
+print("Output:", output_string)
+```
 
 ## Contributing
 

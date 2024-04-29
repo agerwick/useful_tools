@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='useful_tools',
-    version='0.26.2',
+    version='0.26.3',
     packages=find_packages(),
     description='A collection of useful decorators and other tools I use on various projects',
     author='Ronny Ager-Wick',
