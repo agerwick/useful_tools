@@ -246,6 +246,18 @@ output_string = output.getvalue()
 print("Output:", output_string)
 ```
 
+## ip address functions
+
+```python
+is_public_ip_address('192.0.2.256') # returns False, as this is an invalid IP address (each section can only be 0-255)
+is_public_ip_address('192.168.0.1') # returns False, as this is a reserved address (for internal use behind NAT)
+is_public_ip_address('8.8.8.8') # returns True as this is a valid ip address that is addressable on the public net
+is_reserved_ip_address('1.0.0.0') # returns False because it's not a reserved ip address
+is_reserved_ip_address('10.0.0.1') # returns True because it's a reserved ip address
+is_valid_ip_address('192.168.0.1') # returns True because it's a valid ip address (even if it's a reserved address)
+is_valid_ip_address('192.168.0.256') # returns False because the last number is out of range
+```
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
