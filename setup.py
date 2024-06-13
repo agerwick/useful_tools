@@ -1,8 +1,9 @@
 from setuptools import setup, find_packages
+from useful_tools import get_last_commit_datetime
 
 setup(
     name='useful_tools',
-    version='2024.05.25.0555',
+    version=get_last_commit_datetime(),
     packages=find_packages(),
     description='A collection of useful decorators and other tools I use on various projects',
     author='Ronny Ager-Wick',
