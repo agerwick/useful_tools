@@ -1,9 +1,12 @@
 from setuptools import setup, find_packages
-from useful_tools import get_last_commit_datetime
+import subprocess
+
+def get_last_commit_datetime():
+    return subprocess.check_output(["git", "log", "-1", "--date=format:%Y.%m.%d.%H%M", "--format=%cd"]).strip().decode('utf-8')
 
 setup(
     name='useful_tools',
-    version=0, #get_last_commit_datetime(),
+    version=get_last_commit_datetime(),
     packages=find_packages(),
     description='A collection of useful decorators and other tools I use on various projects',
     author='Ronny Ager-Wick',
