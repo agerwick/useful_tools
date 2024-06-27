@@ -1,7 +1,23 @@
 import os
 import sys
 import psutil
+import signal
 from datetime import datetime
+
+def is_process_running(pid):
+    try:
+        process = psutil.Process(pid)
+        return process.is_running()
+    except psutil.NoSuchProcess:
+        return False
+
+def kill_process(pid):
+    try:
+        os.kill(pid, signal.SIGTERM)  # or signal.SIGKILL 
+    except OSError:
+        return f"Error: No process with PID {pid} exists"
+    else:
+        return f"Process successfully killed process with PID {pid}"
 
 def exit_if_already_running(pid_file, verbose=False):
     """
@@ -12,22 +28,24 @@ def exit_if_already_running(pid_file, verbose=False):
         pid_file (str): The path to the PID file.
         verbose (bool, optional): If True, print verbose messages. Defaults to False.
     """
+    my_pid = os.getpid()
     if os.path.isfile(pid_file):
         with open(pid_file, "r") as pidfile:
             try:
                 pid = int(pidfile.read())
             except ValueError:
-                print(f"{datetime.now().strftime('%Y.%m.%d %H:%M:%S')} Error reading the PID from {pid_file} - exiting...")
+                print(f"{datetime.now().strftime('%Y.%m.%d %H:%M:%S')} [PID {my_pid}] Error reading the PID from {pid_file} - exiting...")
                 sys.exit(1)
-        try:
-            if psutil.pid_exists(pid):
-                if verbose:
-                    print(f"{datetime.now().strftime('%Y.%m.%d %H:%M:%S')} The script is already running with PID {pid} - exiting...")
-                sys.exit(0)
-        except psutil.NoSuchProcess:
-            pass
+        if is_process_running(pid):
+            if verbose:
+                print(f"{datetime.now().strftime('%Y.%m.%d %H:%M:%S')} [PID {my_pid}] The script is already running with PID {pid} - exiting...")
+            sys.exit(0)
+        else:
+            if verbose:
+                print(f"{datetime.now().strftime('%Y.%m.%d %H:%M:%S')} [PID {my_pid}] The process with PID {pid} is not running - removing {pid_file}")
+            os.remove(pid_file)
     with open(pid_file, "w") as pidfile:
         pidfile.write(str(os.getpid()))
         if verbose:
-            print(f"{datetime.now().strftime('%Y.%m.%d %H:%M:%S')} Script is not already running - PID written to {pid_file}")
+            print(f"{datetime.now().strftime('%Y.%m.%d %H:%M:%S')} [PID {my_pid}] No other script is running - PID written to {pid_file}")
     return
