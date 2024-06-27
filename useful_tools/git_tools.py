@@ -8,8 +8,8 @@ def get_git_info():
     Retrieves information about the current Git repository.
 
     Returns:
-        str: A string containing the branch name, last commit datetime, and commit ID, separated by slashes.
-             Returns None if an error occurs during retrieval.
+        str:    A string containing the branch name, last commit datetime, and commit ID, separated by slashes.
+                Returns None if an error occurs during retrieval.
     """
     try:
         branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).strip().decode('utf-8')
