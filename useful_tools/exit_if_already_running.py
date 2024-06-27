@@ -29,24 +29,24 @@ def exit_if_already_running(pid_file, verbose=False, timestamp=False):
         verbose (bool, optional): If True, print verbose messages. Defaults to False.
     """
     my_pid = os.getpid()
+    current_timestamp = datetime.now().strftime('%Y.%m.%d %H:%M:%S') if timestamp else ""
     if os.path.isfile(pid_file):
-        timestamp = datetime.now().strftime('%Y.%m.%d %H:%M:%S') if timestamp else ""
         with open(pid_file, "r") as pidfile:
             try:
                 pid = int(pidfile.read())
             except ValueError:
-                print(f"{timestamp}[PID {my_pid}] Error reading the PID from {pid_file} - exiting...")
+                print(f"{current_timestamp}[PID {my_pid}] Error reading the PID from {pid_file} - exiting...")
                 sys.exit(1)
         if is_process_running(pid):
             if verbose:
-                print(f"{timestamp}[PID {my_pid}] The script is already running with PID {pid} - exiting...")
+                print(f"{current_timestamp}[PID {my_pid}] The script is already running with PID {pid} - exiting...")
             sys.exit(0)
         else:
             if verbose:
-                print(f"{timestamp}[PID {my_pid}] The process with PID {pid} is not running - removing {pid_file}")
+                print(f"{current_timestamp}[PID {my_pid}] The process with PID {pid} is not running - removing {pid_file}")
             os.remove(pid_file)
     with open(pid_file, "w") as pidfile:
         pidfile.write(str(os.getpid()))
         if verbose:
-            print(f"{timestamp}[PID {my_pid}] No other script is running - PID written to {pid_file}")
+            print(f"{current_timestamp}[PID {my_pid}] No other script is running - PID written to {pid_file}")
     return
