@@ -1,8 +1,5 @@
 import subprocess
 
-def get_last_commit_datetime():
-    return subprocess.check_output(["git", "log", "-1", "--date=format:%Y.%m.%d.%H%M", "--format=%cd"], stderr=subprocess.STDOUT).strip().decode('utf-8')
-
 def run_git_command(command):
     try:
         return subprocess.check_output(command, stderr=subprocess.STDOUT).strip().decode('utf-8')
@@ -29,6 +26,15 @@ def run_git_command(command):
         else:
             raise e
 
+def get_last_commit_datetime():
+    return run_git_command(["git", "log", "-1", "--date=format:%Y.%m.%d.%H%M", "--format=%cd"])
+
+def get_current_branch():
+    return run_git_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+
+def get_commit_id():
+    return run_git_command(["git", "rev-parse", "HEAD"])
+
 def get_git_info():
     """
     Retrieves information about the current Git repository.
@@ -38,9 +44,9 @@ def get_git_info():
                 Returns an error message if an error occurs during retrieval.
     """
     try:
-        branch = run_git_command(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+        branch = get_current_branch()
         last_commit_datetime = get_last_commit_datetime()
-        commit_id = run_git_command(["git", "rev-parse", "HEAD"])
+        commit_id = get_commit_id()
         return "/".join([branch, last_commit_datetime, commit_id])
     except subprocess.CalledProcessError as e:
         return f"Error getting git info:\n{e.output.decode('utf-8')}"
