@@ -1,5 +1,9 @@
 import subprocess
 
+class GitInfoError(RuntimeError):
+    """Exception raised for errors in the retrieval of Git information."""
+    pass
+
 def run_git_command(command):
     try:
         return subprocess.check_output(command, stderr=subprocess.STDOUT).strip().decode('utf-8')
@@ -49,9 +53,9 @@ def get_git_info():
         commit_id = get_commit_id()
         return "/".join([branch, last_commit_datetime, commit_id])
     except subprocess.CalledProcessError as e:
-        return f"Error getting git info:\n{e.output.decode('utf-8')}"
+        raise GitInfoError(f"Error getting git info:\n{e.output.decode('utf-8')}")
     except Exception as e:
-        return f"Unexpected error getting git info: {str(e)}"
+        raise GitInfoError(f"Unexpected error getting git info:\n{str(e)}")
 
 # Example usage:
 # git_info = get_git_info()
