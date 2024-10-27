@@ -8,3 +8,5 @@ from .ip_address import is_public_ip_address, is_valid_ip_address, is_reserved_i
 from .git_tools import get_git_info, get_last_commit_datetime
 from .time_functions import get_current_utc_time
 from .storage_tools import get_logical_device_info, get_physical_device_info
+from .disk_uuid import get_disk_uuid
+from .dict_tools import get_dict_slice
