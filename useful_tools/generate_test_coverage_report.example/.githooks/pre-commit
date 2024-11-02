@@ -1,0 +1,14 @@
+#!/bin/bash
+# Run the generate_coverage_report.py script
+.venv/scripts/python run_test_coverage_report.py
+
+# Check if the script ran successfully
+if [ $? -ne 0 ]; then
+    echo "run_test_coverage_report.py failed. Aborting commit."
+    exit 1
+fi
+
+# Add the coverage_stats.txt file to the commit
+git add coverage_stats.txt
+git add coverage.xml
+git add .coverage

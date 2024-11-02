@@ -258,15 +258,69 @@ is_valid_ip_address('192.168.0.1') # returns True because it's a valid ip addres
 is_valid_ip_address('192.168.0.256') # returns False because the last number is out of range
 ```
 
+## generate test coverage report
+
+This is a script that creates a test coverage report and, when run as a git pre-commit hook, can abort a commit if you accidentally try to commit to a restricted repo (typically main and test) or the test coverage is below a predetermined threshold.
+
+### installation
+
+Assumes:
+
+- you have git installed and initialized in your project
+- you have a virtual environment set up in .env/
+- you are in the root folder of your project
+
+```bash
+pip install coverage
+pip install git+https://github.com/agerwick/useful_tools.git
+# the above should also be added to requirements.txt
+cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report.example/ .
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-commit
+```
+
+Edit run_test_coverage_report.py to set the minimum_test_coverage_percentage, etc.
+
+NOTE: Both run_test_coverage_report.py and the .githooks folder should be committed to the repository
+
+Add these two lines to your readme, so that other developers know how to set up the pre-commit hook:
+
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-commit
+```
+
+### usage
+
+- when committing, the pre-commit hook will run the test coverage report
+- if the branch is restricted, the commit will be aborted - you will need to use pull requests instead
+- if the branch is in branches_with_enforced_test_coverage, and the test coverage is below the threshold, the commit will be aborted
+- otherwise the commit will proceed
+- regardless of the outcome, the test coverage report will saved in `coverage_stats.txt`
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
 Please make sure to update tests as appropriate.
+
+### Setting up a development environment
+
+After cloning this repo, run:
+
+```bash
+git config core.hooksPath .githooks
+chmod +x .githooks/pre-commit
+```
 
 ## Run tests and generate coverage report
 
-```coverage run -m pytest ; coverage xml```
+This is done automatically on commit, assuming the development environment has been set up after pulling the repo (see the paragraph above).
+
+Or you can run it manually like this:
+
+```bash
+python run_test_coverage_report
+```
 
 ## Author
 
