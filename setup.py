@@ -25,5 +25,5 @@ setup(
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
     ],
-    include_package_data=True,
+    include_package_data=True, # the package data is included in the MANIFEST.in file
 )
