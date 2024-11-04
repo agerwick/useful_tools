@@ -271,12 +271,8 @@ Assumes:
 - you are in the root folder of your project
 
 ```bash
-pip install coverage
 pip install git+https://github.com/agerwick/useful_tools.git
-# the above should also be added to requirements.txt
-cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report.example/ .
-git config core.hooksPath .githooks
-chmod +x .githooks/pre-commit
+source .venv/Lib/site-packages/useful_tools/generate_test_coverage_report_files/install.sh
 ```
 
 Edit run_test_coverage_report.py to set the minimum_test_coverage_percentage, etc.
@@ -284,7 +280,7 @@ Edit .coveragerc to exclude irrelevant subdirectories (such as tests/) from the 
 
 NOTE: run_test_coverage_report.py, .coveragerc and the .githooks folder should all be committed to the repository
 
-Add these two lines of instruction to your readme, so that other developers know how to set up the pre-commit hook:
+Add these two lines of "must-do" instruction to your readme, so that other developers know how to set up the pre-commit hook:
 
 ```bash
 git config core.hooksPath .githooks
