@@ -48,12 +48,27 @@ else
     echo "You may need to run 'pip install -r ./requirements.txt'."
     exit 1
 fi
-echo "copying .coveragerc"
-cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc .coveragerc
-echo "copying .githooks"
-cp -r .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks .githooks
-echo "copying run_test_coverage_report.py"
-cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py run_test_coverage_report.py
+# check if the .coveragerc file exists
+if [ -f ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc" ]; then
+    echo ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc already exists -- no need to copy it"
+else
+    echo "copying .coveragerc"
+    cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc .coveragerc
+fi
+# check if the .githooks directory exists
+if [ -d ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks" ]; then
+    echo ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks already exists -- no need to copy it"
+else
+    echo "copying .githooks"
+    cp -r .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks .githooks
+fi
+# check if the run_test_coverage_report.py file exists
+if [ -f ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py" ]; then
+    echo ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py already exists -- no need to copy it"
+else
+    echo "copying run_test_coverage_report.py"
+    cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py run_test_coverage_report.py
+fi
 echo "Adding .githooks folder to github hooks path..."
 git config core.hooksPath .githooks
 echo "making run_test_coverage_report.sh executable..."
