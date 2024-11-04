@@ -25,8 +25,5 @@ setup(
         'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: 3.13',
     ],
-    package_data={
-        'useful_tools': ['useful_tools/generate_test_coverage_report_files/*'],  # Include .dat files in the data directory of your_package_name
-    },
     include_package_data=True,
 )
