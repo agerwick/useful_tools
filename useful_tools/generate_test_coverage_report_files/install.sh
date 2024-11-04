@@ -51,9 +51,9 @@ fi
 echo "copying .coveragerc"
 cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc .coveragerc
 echo "copying .githooks"
-cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks .githooks
+cp -r .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks .githooks
 echo "copying run_test_coverage_report.sh"
-cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.sh run_test_coverage_report.sh
+cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py run_test_coverage_report.py
 echo "Adding .githooks folder to github hooks path..."
 git config core.hooksPath .githooks
 echo "making run_test_coverage_report.sh executable..."
