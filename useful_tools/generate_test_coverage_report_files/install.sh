@@ -49,22 +49,22 @@ else
     exit 1
 fi
 # check if the .coveragerc file exists
-if [ -f ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc" ]; then
-    echo ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc already exists -- no need to copy it"
+if [ -f ".coveragerc" ]; then
+    echo ".coveragerc already exists -- no need to copy it"
 else
     echo "copying .coveragerc"
     cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.coveragerc .coveragerc
 fi
 # check if the .githooks directory exists
-if [ -d ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks" ]; then
-    echo ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks already exists -- no need to copy it"
+if [ -d ".githooks" ]; then
+    echo ".githooks already exists -- no need to copy it"
 else
     echo "copying .githooks"
     cp -r .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/.githooks .githooks
 fi
 # check if the run_test_coverage_report.py file exists
-if [ -f ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py" ]; then
-    echo ".venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py already exists -- no need to copy it"
+if [ -f "run_test_coverage_report.py" ]; then
+    echo "run_test_coverage_report.py already exists -- no need to copy it"
 else
     echo "copying run_test_coverage_report.py"
     cp .venv/lib/site-packages/useful_tools/generate_test_coverage_report_files/run_test_coverage_report.py run_test_coverage_report.py
