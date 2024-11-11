@@ -99,5 +99,13 @@ class TestGitToolsSync(unittest.TestCase):
         mock_get_last_commit_datetime.assert_called_once()
         mock_get_commit_id.assert_called_once()
 
+    def test_running_sync_function_in_async_context(self):
+        import asyncio
+        with self.assertRaises(RuntimeError):
+            async def wrapper():
+                get_last_commit_datetime()
+
+            asyncio.run(wrapper())
+
 if __name__ == '__main__':
     unittest.main()

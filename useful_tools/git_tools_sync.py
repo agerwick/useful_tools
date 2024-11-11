@@ -1,10 +1,21 @@
 import subprocess
+import asyncio
 
 class GitInfoError(RuntimeError):
     """Exception raised for errors in the retrieval of Git information."""
     pass
 
+def in_async_context():
+    try:
+        asyncio.get_running_loop()
+        return True
+    except RuntimeError:
+        return False
+
 def run_git_command(command):
+    if in_async_context():
+        raise RuntimeError("useful_tools/git_tools is not meant to be called in an async context. Use useful_tools/git_tools_async instead.")
+        # reason: when you call subprocess in debug mode (debugpy), it will hang in most cases.
     try:
         return subprocess.check_output(command, stderr=subprocess.STDOUT).strip().decode('utf-8')
     except subprocess.CalledProcessError as e:

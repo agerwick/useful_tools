@@ -5,7 +5,7 @@ from .modified_dataclasses import modified_dataclass
 from .exit_if_already_running import exit_if_already_running, is_process_running, kill_process
 from .redirect_stdout import redirect_stdout
 from .ip_address import is_public_ip_address, is_valid_ip_address, is_reserved_ip_address
-from .git_tools import get_git_info, get_last_commit_datetime
+from .git_tools_sync import get_git_info, get_last_commit_datetime, get_current_branch, get_commit_id
 from .time_functions import get_current_utc_time
 from .storage_tools import get_logical_device_info, get_physical_device_info
 from .disk_uuid import get_disk_uuid

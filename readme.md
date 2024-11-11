@@ -258,6 +258,13 @@ is_valid_ip_address('192.168.0.1') # returns True because it's a valid ip addres
 is_valid_ip_address('192.168.0.256') # returns False because the last number is out of range
 ```
 
+## git_tools
+
+```python
+# synchronous:
+from useful_tools import g
+```
+
 ## generate test coverage report
 
 This is a script that creates a test coverage report and, when run as a git pre-commit hook, can abort a commit if you accidentally try to commit to a restricted repo (typically main and test) or the test coverage is below a predetermined threshold.
