@@ -115,12 +115,3 @@ class TestGitToolsAsync(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-    # test get_commit_id
-    # test get_git_info
-
-
-if __name__ == '__main__':
-    unittest.main()
