@@ -32,8 +32,8 @@ class SymbolicConstantsDict(UserDict):
     print(my_constants.items())   # prints dict_items([("FOO", "foo"), ("BAR", "bar")])
     ```
     """
+    _initializing = True # set this to True to allow setting new values during initialization
     def __init__(self, *args, **kwargs):
-        self._initializing = True # set this to True to allow setting new values during initialization
         super().__init__(*args, **kwargs)
         self._initializing = False
 
@@ -75,6 +75,7 @@ class SymbolicConstantsDict(UserDict):
     def __setattr__(self, key, value):
         if not self._initializing:
             self._raise_exception()
+        super().__setattr__(key, value)
 
     # disable updating values using the update method
     def update(self, *args, **kwargs):
@@ -151,17 +152,23 @@ def create_symbolic_constants_from_typealias(literal: TypeAlias) -> SymbolicCons
     # remove everything before the first [ and everything after the last ], including the brackets themselves
     _str = _str[_str.find("[")+1:_str.rfind("]")]
     # split the string into a list of literals
-    _literals = _str.split(", ")
+    _literals_list = _str.split(", ")
     # strip the ' from the literals
-    _literals = [literal.strip("'") for literal in _literals]
-    # convert dashes and spaces to underscores, as these won't work as attribute names
-    _literals = [literal.replace("-", "_").replace(" ", "_") for literal in _literals]
+    _literals_list = [literal.strip("'") for literal in _literals_list]
+    # example: ['upload', 'pre-processing', 'processing', 'post-processing']
+
+    # convert dashes and spaces to underscores, as these won't work as attribute names, and convert to uppercase
+    _literals_list_uppercase = [literal.replace("-", "_").replace(" ", "_").upper() for literal in _literals_list]
+    # example: ['UPLOAD', 'PRE_PROCESSING', 'PROCESSING', 'POST_PROCESSING']
+
     # raise a ValueError if any of the literals are not valid Python identifiers
-    for _literal in _literals:
+    for _literal in _literals_list_uppercase:
         if not _literal.isidentifier():
             raise ValueError(f"Invalid literal '{_literal}', must be a valid Python identifier")
-    # create a dictionary of the literals
-    _literals_dict = {literal.upper(): literal for literal in _literals}
+    # create a dictionary of the literals with _literals_list_uppercase as the key and the original _literal_list as the value
+    _literals_dict = {key: value for key, value in zip(_literals_list_uppercase, _literals_list)}
+    # example: {'UPLOAD': 'upload', 'PRE_PROCESSING': 'pre-processing', 'PROCESSING': 'processing', 'POST_PROCESSING': 'post-processing'}
+
     # return a SymbolicConstantsDict object
     symbolic_constants: SymbolicConstantsDict = SymbolicConstantsDict(_literals_dict)
     return symbolic_constants
