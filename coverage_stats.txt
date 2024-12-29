@@ -1,6 +1,6 @@
 coverage version:                          7.4.1
-time report was generated:                 2024-11-11 22:44:50
-total lines of code that should be tested: 527
-total lines of code covered by tests:      450
-total test coverage:                       85.39%
+time report was generated:                 2024-12-29 20:52:01
+total lines of code that should be tested: 544
+total lines of code covered by tests:      467
+total test coverage:                       85.85%
 test coverage threshold:                   80%
