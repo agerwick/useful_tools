@@ -1,6 +1,8 @@
 """
 Usage:
-from symbolic_constants import create_symbolic_constants_from_typealias, SymbolicConstantsDict
+from typing import Literal, TypeAlias
+from useful_tools import SymbolicConstantsDict, create_symbolic_constants_from_typealias
+
 PipelineStageLiteral: TypeAlias = Literal[
     "upload",
     "pre-processing",
