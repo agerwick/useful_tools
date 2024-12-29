@@ -12,6 +12,7 @@ from .disk_uuid import get_disk_uuid
 from .dict_tools import get_dict_slice
 from .generate_test_coverage_report import generate_test_coverage_report
 from .shutil_addons import shutil
+from .symbolic_constants import create_symbolic_constants_from_typealias, SymbolicConstantsDict
 
 __all__ = [
     'act_as_list',
@@ -28,4 +29,5 @@ __all__ = [
     'get_dict_slice',
     'generate_test_coverage_report',
     'shutil'
+    'create_symbolic_constants_from_typealias', 'SymbolicConstantsDict'
 ]
