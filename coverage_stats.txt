@@ -1,5 +1,5 @@
 coverage version:                          7.4.1
-time report was generated:                 2025-01-17 12:54:27
+time report was generated:                 2025-01-17 13:07:46
 total lines of code that should be tested: 624
 total lines of code covered by tests:      535
 total test coverage:                       85.74%
