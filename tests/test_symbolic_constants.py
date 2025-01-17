@@ -45,6 +45,9 @@ class TestWeirdCharacters(unittest.TestCase):
     / to _SLASH_
     >= to _GTE_ and <= to _LTE_
     <>=! to _LT_, _GT_, _EQ_, _NE_
+    any double underscores, either literal or as a result of the translation, will be reduced to a single underscore
+    leading and trailing underscores are removed
+    if the literal starts with a number, we prepend an underscore
     """
     def test_dashes(self):
         self.assertEqual(create_symbolic_constants_from_typealias(Literal["foo-bar"]).FOO_BAR, "foo-bar")
@@ -53,7 +56,7 @@ class TestWeirdCharacters(unittest.TestCase):
     def test_dots(self):
         self.assertEqual(create_symbolic_constants_from_typealias(Literal["foo.bar"]).FOO_BAR, "foo.bar")
     def test_parenthesis(self):
-        self.assertEqual(create_symbolic_constants_from_typealias(Literal["foo(bar)"]).FOO_BAR, "foo(bar)")
+        self.assertEqual(create_symbolic_constants_from_typealias(Literal["snafu(foo)bar"]).FOO_BAR, "snafu(foo)bar")
     def test_spaces(self):
         self.assertEqual(create_symbolic_constants_from_typealias(Literal["foo bar"]).FOO_BAR, "foo bar")
     def test_ampersand(self):
@@ -80,6 +83,8 @@ class TestWeirdCharacters(unittest.TestCase):
         self.assertEqual(create_symbolic_constants_from_typealias(Literal["foo<bar<=baz"]).FOO_LT_BAR_LTE_BAZ, "foo<bar<=baz")
     def test_removal_of_leading_or_trailing_underscores(self):
         self.assertEqual(create_symbolic_constants_from_typealias(Literal["-foo-"]).FOO, "-foo-")
+    def test_removal_of_multiple_leading_or_trailing_underscores(self):
+        self.assertEqual(create_symbolic_constants_from_typealias(Literal["__foo___bar___"]).FOO_BAR, "__foo___bar___")
     def test_prepending_underscore_to_numbers(self):
         self.assertEqual(create_symbolic_constants_from_typealias(Literal["1foo"])._1FOO, "1foo")
     def test_spaces_around_special_characters(self):
